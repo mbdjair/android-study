@@ -4,6 +4,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.djair.chucknorris.domain.config.Result
 import com.djair.chucknorris.domain.repository.JokeRepository
 import kotlinx.coroutines.launch
 
@@ -24,9 +25,18 @@ class HomeViewModel(private val repository: JokeRepository) : ViewModel() {
     fun newJoke() {
         _loading.value = true
         viewModelScope.launch {
-            _data.postValue(repository.fetch())
+            val result = repository.fetch()
+            postResult(result)
             _loading.postValue(false)
         }
+    }
+
+    private fun postResult(result: Result<String>) {
+        val data = when (result) {
+            is Result.Success -> result.data
+            is Result.Error<*> -> result.error.message
+        }
+        _data.postValue(data)
     }
 
     private fun loadData(it: MutableLiveData<String>) {
